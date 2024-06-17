@@ -1,0 +1,26 @@
+{
+  "name": "agua-potable-server",
+  "version": "1.0.0",
+  "description": "Este es una aplicación web para la gestión de informacón de agua potable",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon src/index.js"
+  },
+  "keywords": [
+    "HTML",
+    "CSS",
+    "JS"
+  ],
+  "author": "Samuel Melgarejo",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.3"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.4.1"
+  }
+}
