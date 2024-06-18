@@ -2,10 +2,20 @@ import { request, response } from 'express';
 import bcryptjs from 'bcryptjs';
 import Usuario from '../models/Usuario.models.js';
 
-const getUsuario = (req = request, res = response) => {
-    res.json({
+const getUsuario = async (req = request, res = response) => {
+    const {limite = 10, desde = 0} = req.query;
+
+    const [total, usuarios] = await Promise.all([
+        Usuario.countDocuments({estado: true}),
+        Usuario.find({estado: true})
+        .skip(desde)
+        .limit(limite)
+    ]);
+
+    res.status(200).json({
         ok: true,
-        msg: 'Obtener usuario'
+        total,
+        usuarios
     });
 };
 
@@ -36,17 +46,36 @@ const usuarioPost = async (req = request, res = response) => {
     });
 };
 
-const usuarioPut = (req = request, res = response) => {
-    res.json({
+const usuarioPut = async (req = request, res = response) => {
+    const { id } = req.params;
+    const { _id, password, ...resto} = req.body;
+
+    //encriptar constraseña
+    const salt = bcryptjs.genSaltSync();
+    resto.password = bcryptjs.hashSync(password, salt);
+
+    //buscar y actualizar
+    const usuario = await Usuario.findByIdAndUpdate(id, resto);
+
+    res.status(400).json({
         ok: true,
-        msg: 'Editar usuario'
+        msg: 'Usuario actualizado',
+        usuario
     });
 };
 
-const usuarioDelete = (req = request, res = response) => {
+const usuarioDelete = async (req = request, res = response) => {
+    const { id } = req.params;
+
+    const [usuario, usuarioActualizado] = await Promise.all([
+        Usuario.findByIdAndUpdate(id, { estado: false }),
+        Usuario.findById(id)
+    ]);
+
     res.json({
         ok: true,
-        msg: 'Delete usuario'
+        msg: `Se seshabilitó el usuario con el id: ${ id }`,
+        usuarioActualizado
     });
 };
 

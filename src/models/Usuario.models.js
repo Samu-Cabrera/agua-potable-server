@@ -26,7 +26,7 @@ const UsuarioSchema = new Schema({
     medidor: {
         type: String,
         required: true,
-        default: 'analógico'
+        default: 'analogico'
     },
     email: {
         type: String,
@@ -44,7 +44,7 @@ const UsuarioSchema = new Schema({
     rol: {
         type: String,
         required: true,
-        default: 'user_role'
+        default: 'user_rol'
     },
     imagen: {
         type: String,
