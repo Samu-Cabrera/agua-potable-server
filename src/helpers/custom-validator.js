@@ -2,7 +2,7 @@ import Usuario from '../models/Usuario.models.js';
 import Role from '../models/Roles.model.js';
 
 export const verificarCi = async (ci) => {
-    const existeCi = await Usuario.findOne({ ci});
+    const existeCi = await Usuario.findOne({ ci });
     if(existeCi){
         throw new Error('El CI ya existe');
     }
@@ -27,4 +27,11 @@ export const validarIdUsuario = async (id) => {
     if(!existeUsuario){
         throw new Error('El usuario no existe');
     }
+}
+
+export const usuarioActivo = async (id) => {
+    const usuarioActivo = await Usuario.findOne({ _id: id, estado: true });
+    if(!usuarioActivo){
+        throw new Error('Ya esta deshabilitado');
+    } 
 }

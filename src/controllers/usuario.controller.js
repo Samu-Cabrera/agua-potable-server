@@ -6,8 +6,8 @@ const getUsuario = async (req = request, res = response) => {
     const {limite = 10, desde = 0} = req.query;
 
     const [total, usuarios] = await Promise.all([
-        Usuario.countDocuments({estado: true}),
-        Usuario.find({estado: true})
+        Usuario.countDocuments({ estado: true }),
+        Usuario.find({ estado: true })
         .skip(desde)
         .limit(limite)
     ]);
@@ -55,7 +55,7 @@ const usuarioPut = async (req = request, res = response) => {
     resto.password = bcryptjs.hashSync(password, salt);
 
     //buscar y actualizar
-    const usuario = await Usuario.findByIdAndUpdate(id, resto);
+    const usuario = await Usuario.findByIdAndUpdate(id, resto, { new: true });
 
     res.status(400).json({
         ok: true,
@@ -67,15 +67,12 @@ const usuarioPut = async (req = request, res = response) => {
 const usuarioDelete = async (req = request, res = response) => {
     const { id } = req.params;
 
-    const [usuario, usuarioActualizado] = await Promise.all([
-        Usuario.findByIdAndUpdate(id, { estado: false }),
-        Usuario.findById(id)
-    ]);
+    const usuario = await Usuario.findByIdAndUpdate(id, { estado: false }, { new: true });
 
-    res.json({
+    res.status(200).json({
         ok: true,
-        msg: `Se seshabilitó el usuario con el id: ${ id }`,
-        usuarioActualizado
+        msg: 'Usuario deshabilitado',
+        usuario
     });
 };
 

@@ -23,19 +23,21 @@ usuarioRouter.post('/register', [
     check('rol', 'El rol debe ser de tipo string').isString(),
     check('rol', 'El rol no es valido').isIn(['admin_rol', 'user_rol', 'medidor_rol']),
     check('rol').custom(validador.verificarRol),
-    check('imagen', 'El imagen debe ser de tip string').isString(),
+    check('imagen', 'El imagen debe ser de tipo string').isString(),
     validarCampos
 ], usuario.usuarioPost);
 
 usuarioRouter.put('/upload/:id', [
     check('id', 'No es un id valido').isMongoId(),
     check('id', 'El usuario no existe').custom(validador.validarIdUsuario),
+    check('id').custom(validador.usuarioActivo),
     validarCampos
 ], usuario.usuarioPut);
 
 usuarioRouter.delete('/delete/:id', [
     check('id', 'No es un id valido').isMongoId(),
     check('id', 'El usuario no existe').custom(validador.validarIdUsuario),
+    check('id').custom(validador.usuarioActivo),
     validarCampos
 ] ,usuario.usuarioDelete);
 
