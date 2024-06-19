@@ -8,6 +8,8 @@ const usuarioRouter = Router();
 
 usuarioRouter.get('/list', usuario.getUsuario);
 
+usuarioRouter.get('/list/usuario-deshabilitado', usuario.getUsuariosDeshabilitados);
+
 usuarioRouter.post('/register', [
     check('nombre', 'El nombre es requerido y de tipo string').notEmpty().isString(),
     check('apellido', 'El apellido es requerido y de tipo string').notEmpty().isString(),
@@ -19,10 +21,6 @@ usuarioRouter.post('/register', [
     check('email', 'El email no es valido').notEmpty().isEmail(),
     check('email').custom(validador.verificarEmail),
     check('password', 'El password es requerido y mayor a 6 caracteres').notEmpty().isLength({min: 6}).isString(),
-    check('estado', 'El estado debe ser de tipo boolean').isBoolean(),
-    check('rol', 'El rol debe ser de tipo string').isString(),
-    check('rol', 'El rol no es valido').isIn(['admin_rol', 'user_rol', 'medidor_rol']),
-    check('rol').custom(validador.verificarRol),
     check('imagen', 'El imagen debe ser de tipo string').isString(),
     validarCampos
 ], usuario.usuarioPost);

@@ -41,11 +41,10 @@ const UsuarioSchema = new Schema({
         type: Boolean,
         default: false
     },
-    rol: {
-        type: String,
-        required: true,
-        default: 'user_rol'
-    },
+    roles: [{
+        ref: "Role",
+        type: Schema.Types.ObjectId
+    }],
     imagen: {
         type: String,
     }
