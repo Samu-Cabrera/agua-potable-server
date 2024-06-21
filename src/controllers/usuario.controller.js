@@ -76,18 +76,26 @@ const usuarioPut = async (req = request, res = response) => {
     const { id } = req.params;
     const { _id, password, ...resto } = req.body;
 
-    //encriptar constraseña
-    const salt = bcryptjs.genSaltSync();
-    resto.password = bcryptjs.hashSync(password, salt);
-
-    //buscar y actualizar
-    const usuario = await Usuario.findByIdAndUpdate(id, resto, { new: true });
-
-    res.status(400).json({
-        ok: true,
-        msg: 'Usuario actualizado',
-        usuario
-    });
+    try {
+        if(password){
+            const salt = bcryptjs.genSaltSync(10);
+            resto.password = bcryptjs.hashSync(password, salt);
+        }
+        //buscar y actualizar
+        const usuario = await Usuario.findByIdAndUpdate(id, resto, { new: true });
+    
+        res.status(400).json({
+            ok: true,
+            msg: 'Usuario actualizado',
+            usuario
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            ok: false,
+            msg: 'No se pudo actualizar el usuario.'
+        });
+    }
 };
 
 const usuarioDelete = async (req = request, res = response) => {

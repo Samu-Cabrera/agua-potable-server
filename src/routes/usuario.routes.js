@@ -3,12 +3,17 @@ import { check } from 'express-validator';
 import { validarCampos } from '../middlewares/validar-campos.middleware.js';
 import * as validador from '../helpers/custom-validator.js';
 import usuario from '../controllers/usuario.controller.js';
+import { validarJWT } from '../middlewares/validar-jwt.js';
+import { validarRol } from '../middlewares/validar-rol.middleware.js';
 
 const usuarioRouter = Router();
 
 usuarioRouter.get('/list', usuario.getUsuario);
 
-usuarioRouter.get('/list/usuario-deshabilitado', usuario.getUsuariosDeshabilitados);
+usuarioRouter.get('/list/usuario-deshabilitado', [
+    validarJWT,
+    validarCampos
+] ,usuario.getUsuariosDeshabilitados);
 
 usuarioRouter.post('/register', [
     check('nombre', 'El nombre es requerido y de tipo string').notEmpty().isString(),
@@ -26,6 +31,7 @@ usuarioRouter.post('/register', [
 ], usuario.usuarioPost);
 
 usuarioRouter.put('/upload/:id', [
+    validarJWT,
     check('id', 'No es un id valido').isMongoId(),
     check('id', 'El usuario no existe').custom(validador.validarIdUsuario),
     check('id').custom(validador.usuarioActivo),
@@ -33,6 +39,8 @@ usuarioRouter.put('/upload/:id', [
 ], usuario.usuarioPut);
 
 usuarioRouter.delete('/delete/:id', [
+    validarJWT,
+    validarRol,
     check('id', 'No es un id valido').isMongoId(),
     check('id', 'El usuario no existe').custom(validador.validarIdUsuario),
     check('id').custom(validador.usuarioActivo),
