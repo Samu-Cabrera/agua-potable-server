@@ -25,7 +25,6 @@ const UsuarioSchema = new Schema({
     },
     medidor: {
         type: String,
-        required: true,
         default: 'analogico'
     },
     email: {
@@ -47,6 +46,7 @@ const UsuarioSchema = new Schema({
     }],
     imagen: {
         type: String,
+        default: ''
     }
 }, {
     timestamps: true,

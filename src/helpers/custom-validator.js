@@ -1,5 +1,6 @@
 import Usuario from '../models/Usuario.models.js';
 import Role from '../models/Roles.model.js';
+import Lectura from '../models/Medidor.model.js';
 
 export const verificarCi = async (ci) => {
     const existeCi = await Usuario.findOne({ ci });
@@ -35,3 +36,11 @@ export const usuarioActivo = async (id) => {
         throw new Error('Ya esta deshabilitado');
     } 
 }
+
+export const verificarLecturaId = async (id) => {
+    const existeLectura = await Lectura.findById(id);
+    if(!existeLectura){
+        throw new Error('La lectura no existe');
+    }
+}
+

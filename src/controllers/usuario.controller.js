@@ -36,6 +36,35 @@ const getUsuariosDeshabilitados = async (req = request, res = response) => {
     });
 }
 
+const getUsuariosAll = async (req = request, res = response) => {
+    const [total, usuarios] = await Promise.all([
+        Usuario.countDocuments(),
+        Usuario.find().populate('roles')
+    ]);
+
+    res.status(200).json({
+        ok: true,
+        msg: 'Todos los usuarios',
+        total,
+        usuarios
+    });
+}
+
+const getUserById = async (req = request, res = response) => {
+    const { id } = req.params;
+
+    try {
+        const usuario = await Usuario.findById(id);
+        return res.status(200).json(usuario);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error al obtener el usuario'
+        });
+    }
+}
+
 const usuarioPost = async (req = request, res = response) => {
     const { nombre, apellido, ci, direccion, telefono, email, password, estado, roles, imagen } = req.body;  
     //encriptar contraseña
@@ -113,6 +142,8 @@ const usuarioDelete = async (req = request, res = response) => {
 export default {
     getUsuario,
     getUsuariosDeshabilitados,
+    getUsuariosAll,
+    getUserById,
     usuarioPost,
     usuarioPut,
     usuarioDelete

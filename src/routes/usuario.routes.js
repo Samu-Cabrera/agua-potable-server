@@ -10,6 +10,15 @@ const usuarioRouter = Router();
 
 usuarioRouter.get('/list', usuario.getUsuario);
 
+usuarioRouter.get('/list-all', usuario.getUsuariosAll);
+
+usuarioRouter.get('/:id', [
+    check('id', 'El id no es valido').isMongoId(),
+    check('id', 'El usuario no existe').custom(validador.validarIdUsuario),
+    check('id').custom(validador.usuarioActivo),
+    validarCampos
+], usuario.getUserById);
+
 usuarioRouter.get('/list/usuario-deshabilitado', [
     validarJWT,
     validarCampos
@@ -26,7 +35,6 @@ usuarioRouter.post('/register', [
     check('email', 'El email no es valido').notEmpty().isEmail(),
     check('email').custom(validador.verificarEmail),
     check('password', 'El password es requerido y mayor a 6 caracteres').notEmpty().isLength({min: 6}).isString(),
-    check('imagen', 'El imagen debe ser de tipo string').isString(),
     validarCampos
 ], usuario.usuarioPost);
 
