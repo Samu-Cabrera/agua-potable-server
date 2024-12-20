@@ -9,7 +9,6 @@ const FacturaSchema = new Schema({
     nroFactura: {
         type: Number,
         required: true,
-        unique: true
     },
     consumo: {
         cantidad: {

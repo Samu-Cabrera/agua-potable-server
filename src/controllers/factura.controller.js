@@ -3,12 +3,13 @@ import Factura from '../models/Factura.model.js';
 
 export const createFactura = async (req = request, res = response) => {
     const { userID } = req.params;
-    const { cantidad, iva, precio, fechaVencimiento, cuentaTotal } = req.body;
+    const { cantidad, iva, precio, fechaVencimiento } = req.body;
 
     try {
 
         const lastFactura = await Factura.findOne().sort({ nroFactura: -1 });
         const nroFactura = lastFactura ? lastFactura.nroFactura + 1 : 1;
+        const cuentaTotal = (cantidad * precio) + ((cantidad * precio) * iva / 100);
 
         const factura = {
             userID,
@@ -28,7 +29,7 @@ export const createFactura = async (req = request, res = response) => {
 
         res.status(201).json({
             ok: true,
-            nuevaFactura
+            factura: nuevaFactura
         });
 
     } catch (error){
@@ -47,7 +48,7 @@ export const getFacturaPendiente = async (req = request, res = response) => {
 
     try {
 
-        const factura = await Factura.find({ userID, estadoPago: false });
+        const factura = await Factura.find({ userID, estadoPago: false }).populate('userID').exec();
 
         res.status(200).json({
             ok: true,
@@ -63,4 +64,77 @@ export const getFacturaPendiente = async (req = request, res = response) => {
     }
 }
 
+export const getFacturaAll = async (req = request, res = response) => {
+    const { userID } = req.params;
+
+    try {
+
+        const factura = await Factura.find({ userID }).populate('userID', 'nombre apellido ci direccion').exec();
+
+        res.status(200).json({
+            ok: true,
+            factura
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error al obtener la factura'
+        });
+    }
+}
+
+export const getFacturaById = async (req = request, res = response) => {
+    const { id } = req.params;
+
+    try {
+        const factura = await Factura.findById(id).populate('userID');
+        res.status(200).json(factura);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            ok: false,
+            msg: 'Error al obtener las factura'
+        });
+    }
+}
+
+export const getFacturas = async (req = request, res = response) => {
+    try {
+        const facturas = await Factura.find().populate('userID').exec();
+        res.status(200).json(facturas);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            ok: false,
+            msg: 'Error al obtener las facturas'
+        });
+    }
+}
+
+
+
+export const updateFactura = async (req = request, res = response) => {
+    const { id } = req.params;
+    const body = req.body;
+
+    try {
+ 
+        const factura = await Factura.findByIdAndUpdate(id, { consumo: body }).populate('userID', 'nombre apellido ci direccion').exec();
+        
+        res.status(200).json({
+            ok: true,
+            factura
+        });
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            ok: false,
+            msg: 'Error al actualizar la factura'
+        });
+    }
+}
 
