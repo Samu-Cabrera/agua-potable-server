@@ -31,9 +31,9 @@ export const validarIdUsuario = async (id) => {
 }
 
 export const usuarioActivo = async (id) => {
-    const usuarioActivo = await Usuario.findOne({ _id: id, estado: true });
+    const usuarioActivo = await Usuario.findOne({ _id: id, estado: 'activo' });
     if(!usuarioActivo){
-        throw new Error('Ya esta deshabilitado');
+        throw new Error('Este usuario no esta disponible.');
     } 
 }
 

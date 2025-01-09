@@ -72,6 +72,14 @@ export const lecturaPost = async (req = request, res = response) => {
 
         nuevaLectura.save();
 
+        // Registrar auditoría
+        await AuditLog.create({
+            action: 'create',
+            user: userID,
+            description: `Nueva lectura creada con lectura: ${lectura}`,
+            metadata: { lectura },
+        });
+
         const lecturas = await Lectura.find({ userID }).sort({ fechaLectura: -1 }).limit(2);
 
         if(lecturas.length < 2){
@@ -110,6 +118,14 @@ export const updateLimit = async (req = request, res = response) => {
     try {
 
         const ultimaLecura = await Lectura.findByIdAndUpdate(lecturaId, { limite: Number(limite), fechaLimite: new Date()  }, { new: true });
+
+        // Registrar auditoría
+        await AuditLog.create({
+            action: 'update',
+            user: ultimaLecura.userID,
+            description: `Límite actualizado para lectura ID: ${lecturaId}`,
+            metadata: { lecturaId, nuevoLimite: limite, fechaLimite: ultimaLecura.fechaLimite },
+        });
 
         res.status(200).json({
             ok: true,

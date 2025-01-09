@@ -1,6 +1,7 @@
 import { request, response } from 'express';
 import Usuario from '../models/Usuario.models.js';
 import Aviso from '../models/Aviso.model.js';
+import AuditLog from '../models/AuditLogs.model.js';
 
 export const crearAviso = async (req = request, res = response) => {
   try {
@@ -18,6 +19,14 @@ export const crearAviso = async (req = request, res = response) => {
     });
 
     await nuevoAviso.save();
+
+    // Registrar auditoría
+    await AuditLog.create({
+      action: 'create',
+      user: userId,
+      description: `Nuevo aviso creado.`,
+      metadata: { mensaje, leido, usuario: userId },
+    });
 
     res.status(201).json(nuevoAviso);
   } catch (error) {
@@ -78,6 +87,13 @@ export const responderAviso = async (req = request, res = response) => {
 
     aviso.respuestas.push(nuevaRespuesta);
     await aviso.save();
+
+    await AuditLog.create({
+      action: 'update',
+      user: usuarioId,
+      description: `Respuesta añadida al aviso con ID: ${id}`,
+      metadata: { avisoId: id, mensaje, usuarioId },
+    });
 
     res.status(201).json(aviso);
   } catch (error) {

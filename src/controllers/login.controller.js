@@ -2,6 +2,7 @@ import { request, response } from 'express';
 import bcrypt from 'bcryptjs';
 import Usuario from '../models/Usuario.models.js';
 import { generarJWT } from '../helpers/generar-jwt.js';
+import { logAudit } from '../helpers/auditLog.js';
 
 export const login = async (req = request, res = response) => {
     const { ci, password } = req.body;
@@ -35,6 +36,9 @@ export const login = async (req = request, res = response) => {
     
         //generar jwt
         const token = await generarJWT(usuario.id);
+
+        // Registrar auditoría
+        await logAudit('login', usuario._id, `Usuario inició sesión: ${usuario.nombre}`);
     
         res.status(200).json({
             ok: true,

@@ -37,8 +37,9 @@ const UsuarioSchema = new Schema({
         required: true
     },
     estado: {
-        type: Boolean,
-        default: false
+        type: String,
+        enum: ['pendiente', 'activo', 'eliminado'],
+        default: 'pendiente'
     },
     roles: [{
         ref: "Role",

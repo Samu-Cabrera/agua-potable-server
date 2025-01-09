@@ -83,6 +83,16 @@ export const crearRecibo = async (req = request, res = response) => {
 
     await recibo.save();
 
+    await AuditLog.create({
+      action: 'create',
+      user: userID,
+      description: `Recibo creado: N° ${nroRecibo} por un total de ${total}`,
+      metadata: { 
+        nroRecibo, 
+        total
+      },
+    });
+
     res.status(201).json({
       recibo
     });

@@ -2,13 +2,14 @@ import { request, response } from 'express';
 import bcryptjs from 'bcryptjs';
 import Usuario from '../models/Usuario.models.js';
 import Rol from '../models/Roles.model.js';
+import { logAudit } from '../helpers/auditLog.js';
 
 const getUsuario = async (req = request, res = response) => {
     const {limite = 10, desde = 0} = req.query;
 
     const [total, usuarios, rol] = await Promise.all([
-        Usuario.countDocuments({ estado: true }),
-        Usuario.find({ estado: true })
+        Usuario.countDocuments({ estado: 'activo' }),
+        Usuario.find({ estado: 'activo' })
         .skip(desde)
         .limit(limite)
         .populate('roles')
@@ -24,13 +25,27 @@ const getUsuario = async (req = request, res = response) => {
 
 const getUsuariosDeshabilitados = async (req = request, res = response) => {
     const [total, usuarios] = await Promise.all([
-        Usuario.countDocuments({ estado: false }),
-        Usuario.find({ estado: false }).populate('roles')
+        Usuario.countDocuments({ estado: 'eliminado' }),
+        Usuario.find({ estado: 'eliminado' }).populate('roles')
     ]);
 
     res.status(200).json({
         ok: true,
         msg: 'Usuarios deshabilitados',
+        total,
+        usuarios
+    });
+}
+
+const getUsuariosPendientes = async (req = request, res = response) => {
+    const [total, usuarios] = await Promise.all([
+        Usuario.countDocuments({ estado: 'pendiente' }),
+        Usuario.find({ estado: 'pendiente' }).populate('roles')
+    ]);
+
+    res.status(200).json({
+        ok: true,
+        msg: 'Usuarios pendientes',
         total,
         usuarios
     });
@@ -66,7 +81,7 @@ const getUserById = async (req = request, res = response) => {
 }
 
 const usuarioPost = async (req = request, res = response) => {
-    const { nombre, apellido, ci, direccion, telefono, email, password, estado, roles, imagen } = req.body;  
+    const { nombre, apellido, ci, direccion, telefono, email, password, roles, imagen } = req.body;  
     //encriptar contraseña
     const salt = bcryptjs.genSaltSync();
     const hashPassword = bcryptjs.hashSync(password, salt);
@@ -79,7 +94,6 @@ const usuarioPost = async (req = request, res = response) => {
         telefono,
         email,
         password: hashPassword,
-        estado,
         roles,
         imagen
     });
@@ -94,6 +108,9 @@ const usuarioPost = async (req = request, res = response) => {
 
     //guardar usuario en la base de datos
     await nuevoUsuario.save();
+
+    // Registrar auditoría
+    await logAudit('create', id, `Usuario creado: ${nombre} ${apellido}`, { userId: nuevoUsuario._id });
 
     res.status(201).json({
         ok: true,
@@ -112,6 +129,9 @@ const usuarioPut = async (req = request, res = response) => {
         }
         //buscar y actualizar
         const usuario = await Usuario.findByIdAndUpdate(id, resto, { new: true });
+
+        // Registrar auditoría
+        await logAudit('update', id, `Usuario actualizado: ${usuario.nombre}`, { userId: id, changes: resto });
     
         res.status(400).json({
             ok: true,
@@ -130,7 +150,10 @@ const usuarioPut = async (req = request, res = response) => {
 const usuarioDelete = async (req = request, res = response) => {
     const { id } = req.params;
 
-    const usuario = await Usuario.findByIdAndUpdate(id, { estado: false }, { new: true });
+    const usuario = await Usuario.findByIdAndUpdate(id, { estado: 'eliminado' }, { new: true });
+
+    // Registrar auditoría
+    await logAudit('delete', id, `Usuario eliminado: ${usuario.nombre}`, { userId: id });
 
     res.status(200).json({
         ok: true,
@@ -139,12 +162,29 @@ const usuarioDelete = async (req = request, res = response) => {
     });
 };
 
+const usuarioActivar = async (req = request, res = response) => {
+    const { id } = req.params;
+
+    const usuario = await Usuario.findByIdAndUpdate(id, { estado: 'activo' }, { new: true });
+
+    await logAudit('activate', id, `Usuario activado: ${usuario.nombre} ${usuario.apellido}`, { userId: id });
+
+    res.status(200).json({
+        ok: true,
+        msg: 'Usuario activado',
+        usuario
+    });
+};
+
 export default {
     getUsuario,
     getUsuariosDeshabilitados,
+    getUsuariosPendientes,
     getUsuariosAll,
     getUserById,
     usuarioPost,
     usuarioPut,
-    usuarioDelete
+    usuarioDelete,
+    usuarioActivar
 }
+

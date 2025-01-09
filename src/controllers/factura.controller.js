@@ -1,5 +1,6 @@
 import { request, response } from 'express';
 import Factura from '../models/Factura.model.js';
+import AuditLog from '../models/AuditLogs.model.js';
 
 export const createFactura = async (req = request, res = response) => {
     const { userID } = req.params;
@@ -26,6 +27,14 @@ export const createFactura = async (req = request, res = response) => {
         const nuevaFactura = new Factura(factura);
 
         await nuevaFactura.save();
+
+        // Registrar auditoría
+        await AuditLog.create({
+            action: 'create',
+            user: userID,  // El ID del usuario que creó la factura
+            description: `Factura creada: N° ${nroFactura}.`,
+            metadata: { nroFactura, userID, cantidad, iva, precio, fechaVencimiento, cuentaTotal },
+        });
 
         res.status(201).json({
             ok: true,
@@ -114,8 +123,6 @@ export const getFacturas = async (req = request, res = response) => {
     }
 }
 
-
-
 export const updateFactura = async (req = request, res = response) => {
     const { id } = req.params;
     const body = req.body;
@@ -124,6 +131,14 @@ export const updateFactura = async (req = request, res = response) => {
  
         const factura = await Factura.findByIdAndUpdate(id, { consumo: body }).populate('userID', 'nombre apellido ci direccion').exec();
         
+        // Registrar auditoría
+        await AuditLog.create({
+            action: 'update',
+            user: factura.userID._id,
+            description: `Factura actualizada: N° ${factura.nroFactura}`,
+            metadata: { facturaId: id, consumo: body },
+        });
+
         res.status(200).json({
             ok: true,
             factura
