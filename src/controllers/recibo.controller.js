@@ -1,6 +1,7 @@
 import { request, response } from 'express';
 import Recibo from '../models/Recibo.model.js';
 import Factura from '../models/Factura.model.js';
+import { logAudit } from '../helpers/auditLog.js';
 
 export const obtenerRecibos = async (req = request, res = response) => {
   try {
@@ -60,6 +61,7 @@ export const getReciboById = async (req = request, res = response) => {
 export const crearRecibo = async (req = request, res = response) => {
   const { userID } = req.params;
   const { servicio, formaPago, importe, tesorero } = req.body;
+  const { _id: userId } = req.usuario;
   
   try {
     const facturasPendientes = await Factura.find({ userID, estadoPago: false });
@@ -83,14 +85,12 @@ export const crearRecibo = async (req = request, res = response) => {
 
     await recibo.save();
 
-    await AuditLog.create({
-      action: 'create',
-      user: userID,
-      description: `Recibo creado: N° ${nroRecibo} por un total de ${total}`,
-      metadata: { 
-        nroRecibo, 
-        total
-      },
+    // Registrar en la auditoría
+    await logAudit({
+      user: userId,
+      action: 'CREACIÓN DE RECIBO',
+      description: `Recibo creado para el usuario con ID: ${userID}`,
+      area: 'Gestión de Recibos',
     });
 
     res.status(201).json({

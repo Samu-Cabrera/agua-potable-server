@@ -1,7 +1,7 @@
 import { request, response } from 'express';
 import Usuario from '../models/Usuario.models.js';
 import Aviso from '../models/Aviso.model.js';
-import AuditLog from '../models/AuditLogs.model.js';
+import { logAudit } from '../helpers/auditLog.js'
 
 export const crearAviso = async (req = request, res = response) => {
   try {
@@ -21,11 +21,12 @@ export const crearAviso = async (req = request, res = response) => {
     await nuevoAviso.save();
 
     // Registrar auditoría
-    await AuditLog.create({
-      action: 'create',
-      user: userId,
-      description: `Nuevo aviso creado.`,
-      metadata: { mensaje, leido, usuario: userId },
+    const { _id: loggedUserId } = req.usuario;
+    await logAudit({
+      user: loggedUserId,
+      action: 'CREACIÓN DE AVISO',
+      description: `Se creó un aviso para el usuario con ID: ${userId}. Mensaje: "${mensaje}".`,
+      area: 'Gestión de Avisos',
     });
 
     res.status(201).json(nuevoAviso);
@@ -88,12 +89,6 @@ export const responderAviso = async (req = request, res = response) => {
     aviso.respuestas.push(nuevaRespuesta);
     await aviso.save();
 
-    await AuditLog.create({
-      action: 'update',
-      user: usuarioId,
-      description: `Respuesta añadida al aviso con ID: ${id}`,
-      metadata: { avisoId: id, mensaje, usuarioId },
-    });
 
     res.status(201).json(aviso);
   } catch (error) {
@@ -105,6 +100,14 @@ export const marcarComoLeido = async (req, res) => {
   try {
     const { avisoId } = req.params;
     const aviso = await Aviso.findByIdAndUpdate(avisoId, { leido: true });
+    // Registrar auditoría
+    const { _id: loggedUserId } = req.usuario;
+    await logAudit({
+      user: loggedUserId,
+      action: 'RESPUESTA A AVISO',
+      description: `Se respondió al aviso con ID: ${id}. Respuesta: "${mensaje}".`,
+      area: 'Gestión de Avisos',
+    });
     res.json(aviso);
   } catch (error) {
     res.status(500).json({ mensaje: 'Error al marcar el aviso como leído', error: error.message });

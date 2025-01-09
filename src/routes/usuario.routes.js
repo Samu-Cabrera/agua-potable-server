@@ -39,10 +39,10 @@ usuarioRouter.post('/register', [
 ], usuario.usuarioPost);
 
 usuarioRouter.put('/upload/:id', [
-    // validarJWT,
+    validarJWT,
     check('id', 'No es un id valido').isMongoId(),
-    /*check('id', 'El usuario no existe').custom(validador.validarIdUsuario), */
-    // check('id').custom(validador.usuarioActivo),
+    check('id', 'El usuario no existe').custom(validador.validarIdUsuario),
+    check('id').custom(validador.usuarioActivo),
     validarCampos
 ], usuario.usuarioPut);
 
@@ -55,11 +55,13 @@ usuarioRouter.put('/upload/:id', [
     validarCampos
 ] ,usuario.usuarioDelete); */
 usuarioRouter.delete('/delete/:id', [
+    validarJWT,
     check('id', 'No es un id valido').isMongoId(),
     validarCampos
 ] ,usuario.usuarioDelete);
 
 usuarioRouter.patch('/activar/:id', [
+    validarJWT,
     check('id', 'No es un ID válido').isMongoId(),
     validarCampos
 ], usuario.usuarioActivar);

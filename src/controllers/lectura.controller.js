@@ -1,6 +1,8 @@
 import { request, response } from 'express';
 import Lectura from '../models/Medidor.model.js';
 import { differenceInDays, parseISO } from 'date-fns';
+import { logAudit } from '../helpers/auditLog.js';
+
 
 
 export const getLecturaAll = async (req = request, res = response) => {
@@ -59,6 +61,7 @@ export const getLecturaActual = async (req = request, res = response) => {
 
 export const lecturaPost = async (req = request, res = response) => {
     const { userID, lectura, limite, fechaLectura, fechaLimite } = req.body;
+    const { _id: userId } = req.usuario;
 
     try {
 
@@ -72,15 +75,15 @@ export const lecturaPost = async (req = request, res = response) => {
 
         nuevaLectura.save();
 
-        // Registrar auditoría
-        await AuditLog.create({
-            action: 'create',
-            user: userID,
-            description: `Nueva lectura creada con lectura: ${lectura}`,
-            metadata: { lectura },
-        });
-
         const lecturas = await Lectura.find({ userID }).sort({ fechaLectura: -1 }).limit(2);
+
+        // Registro en la auditoría
+        await logAudit({
+            user: userId,
+            action: 'REGISTRO DE LECTURA',
+            description: `Se registró una nueva lectura para el usuario con ID: ${userID}`,
+            area: 'Lecturas de Medidores',
+        });
 
         if(lecturas.length < 2){
             return res.status(200).json({ 
@@ -113,18 +116,19 @@ export const lecturaPost = async (req = request, res = response) => {
 
 export const updateLimit = async (req = request, res = response) => {
     const { lecturaId } = req.params;
+    const { _id: userId } = req.usuario;
     const { limite } = req.body;
 
     try {
 
         const ultimaLecura = await Lectura.findByIdAndUpdate(lecturaId, { limite: Number(limite), fechaLimite: new Date()  }, { new: true });
 
-        // Registrar auditoría
-        await AuditLog.create({
-            action: 'update',
-            user: ultimaLecura.userID,
-            description: `Límite actualizado para lectura ID: ${lecturaId}`,
-            metadata: { lecturaId, nuevoLimite: limite, fechaLimite: ultimaLecura.fechaLimite },
+        // Registro en la auditoría
+        await logAudit({
+            user: userId,
+            action: 'ACTUALIZACIÓN DE LÍMITE',
+            description: `Se actualizó el límite de la lectura con ID: ${lecturaId}`,
+            area: 'Lecturas de Medidores',
         });
 
         res.status(200).json({

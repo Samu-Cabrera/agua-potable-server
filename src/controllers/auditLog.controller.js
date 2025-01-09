@@ -5,7 +5,7 @@ export const getAuditLogs = async (req, res) => {
 
     try {
         const logs = await AuditLog.find()
-            .populate('user', 'nombre apellido email') // Trae campos específicos del usuario
+            .populate('user') // Trae campos específicos del usuario
             .skip((page - 1) * limit)
             .limit(parseInt(limit))
             .sort({ createdAt: -1 });

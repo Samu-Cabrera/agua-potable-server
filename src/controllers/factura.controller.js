@@ -1,10 +1,11 @@
 import { request, response } from 'express';
 import Factura from '../models/Factura.model.js';
-import AuditLog from '../models/AuditLogs.model.js';
+import { logAudit } from '../helpers/auditLog.js';
 
 export const createFactura = async (req = request, res = response) => {
     const { userID } = req.params;
     const { cantidad, iva, precio, fechaVencimiento } = req.body;
+    const { _id: userId } = req.usuario;
 
     try {
 
@@ -28,12 +29,12 @@ export const createFactura = async (req = request, res = response) => {
 
         await nuevaFactura.save();
 
-        // Registrar auditoría
-        await AuditLog.create({
-            action: 'create',
-            user: userID,  // El ID del usuario que creó la factura
-            description: `Factura creada: N° ${nroFactura}.`,
-            metadata: { nroFactura, userID, cantidad, iva, precio, fechaVencimiento, cuentaTotal },
+        // Registrar en la auditoría
+        await logAudit({
+            user: userId,
+            action: 'CREACIÓN DE FACTURA',
+            description: `Factura creada para el usuario con ID: ${userID}`,
+            area: 'Gestión de Facturas',
         });
 
         res.status(201).json({
@@ -126,17 +127,18 @@ export const getFacturas = async (req = request, res = response) => {
 export const updateFactura = async (req = request, res = response) => {
     const { id } = req.params;
     const body = req.body;
+    const { _id: userId } = req.usuario;
 
     try {
  
         const factura = await Factura.findByIdAndUpdate(id, { consumo: body }).populate('userID', 'nombre apellido ci direccion').exec();
-        
-        // Registrar auditoría
-        await AuditLog.create({
-            action: 'update',
-            user: factura.userID._id,
-            description: `Factura actualizada: N° ${factura.nroFactura}`,
-            metadata: { facturaId: id, consumo: body },
+
+        // Registrar en la auditoría
+        await logAudit({
+            user: userId,
+            action: 'ACTUALIZACIÓN DE FACTURA',
+            description: `Factura con ID: ${id} actualizada.`,
+            area: 'Gestión de Facturas',
         });
 
         res.status(200).json({

@@ -130,9 +130,15 @@ const usuarioPut = async (req = request, res = response) => {
         //buscar y actualizar
         const usuario = await Usuario.findByIdAndUpdate(id, resto, { new: true });
 
-        // Registrar auditoría
-        await logAudit('update', id, `Usuario actualizado: ${usuario.nombre}`, { userId: id, changes: resto });
-    
+         // Registrar en auditoría
+        const { _id: userId } = req.usuario;
+        await logAudit({
+            user: userId,
+            action: 'Actualización',
+            description: `Actualización del usuario con ID: ${id}`,
+            area: 'Gestión de Usuarios',
+        });
+        
         res.status(400).json({
             ok: true,
             msg: 'Usuario actualizado',
@@ -149,12 +155,17 @@ const usuarioPut = async (req = request, res = response) => {
 
 const usuarioDelete = async (req = request, res = response) => {
     const { id } = req.params;
+    const { _id: userId } = req.usuario;
 
     const usuario = await Usuario.findByIdAndUpdate(id, { estado: 'eliminado' }, { new: true });
 
-    // Registrar auditoría
-    await logAudit('delete', id, `Usuario eliminado: ${usuario.nombre}`, { userId: id });
-
+    // Registrar en auditoría
+     await logAudit({
+        user: userId,
+        action: 'Eliminación',
+        description: `Eliminación del usuario con ID: ${id}`,
+        area: 'Gestión de Usuarios',
+    });
     res.status(200).json({
         ok: true,
         msg: 'Usuario deshabilitado',
@@ -164,11 +175,17 @@ const usuarioDelete = async (req = request, res = response) => {
 
 const usuarioActivar = async (req = request, res = response) => {
     const { id } = req.params;
+    const { _id: userId } = req.usuario;
 
     const usuario = await Usuario.findByIdAndUpdate(id, { estado: 'activo' }, { new: true });
 
-    await logAudit('activate', id, `Usuario activado: ${usuario.nombre} ${usuario.apellido}`, { userId: id });
-
+    // Registrar en auditoría
+    await logAudit({
+        user: userId,
+        action: 'Aceptar Registro',
+        description: `Usuario con ID: ${id} aceptado`,
+        area: 'Gestión de Usuarios',
+    });
     res.status(200).json({
         ok: true,
         msg: 'Usuario activado',
